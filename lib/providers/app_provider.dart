@@ -21,6 +21,12 @@ class AppProvider with ChangeNotifier {
   Set<int> _connectedRecordIds = {};
   String _errorMessage = '';
 
+  // --- NEW: State for Add Record Page ---
+  Status _batchListStatus = Status.Uninitialized;
+  Status _addDataStatus = Status.Uninitialized;
+  List<Batch> _batchesForAdd = [];
+
+
   // Getters to access the state from the UI
   Status get authStatus => _authStatus;
   Status get eventDataStatus => _eventDataStatus;
@@ -30,6 +36,11 @@ class AppProvider with ChangeNotifier {
   List<Record> get connectedRecords => _connectedRecords;
   Set<int> get connectedRecordIds => _connectedRecordIds;
   String get errorMessage => _errorMessage;
+
+  // --- NEW: Getters for Add Record Page ---
+  Status get batchListStatus => _batchListStatus;
+  Status get addDataStatus => _addDataStatus;
+  List<Batch> get batchesForAdd => _batchesForAdd;
 
   AppProvider() {
     _checkLoginStatus();
@@ -89,6 +100,10 @@ class AppProvider with ChangeNotifier {
       _connectedRecords = [];
       _connectedRecordIds = {};
       _errorMessage = '';
+      // --- NEW: Reset add record state ---
+      _batchListStatus = Status.Uninitialized;
+      _addDataStatus = Status.Uninitialized;
+      _batchesForAdd = [];
   }
 
   // --- Event Collector Methods ---
@@ -158,7 +173,6 @@ class AppProvider with ChangeNotifier {
 
     final allEvents = await _apiService.getEvents();
     
-    // This is the line that's fixed
     List<int> currentEventIds = List<int>.from(fullRecord.eventNames.map((name) {
         final event = allEvents.firstWhere((e) => e.name == name, orElse: () => Event(id: -1, name: ''));
         return event.id;
@@ -181,8 +195,37 @@ class AppProvider with ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       notifyListeners();
-      // Optionally re-throw or handle the error more gracefully
+    }
+  }
+
+  // --- NEW: Add Record Methods ---
+
+  Future<void> fetchBatchesForAdd() async {
+    _batchListStatus = Status.Fetching;
+    notifyListeners();
+    try {
+      _batchesForAdd = await _apiService.getBatches();
+      _batchListStatus = Status.Fetched;
+    } catch (e) {
+      _batchListStatus = Status.Error;
+      _errorMessage = e.toString();
+    }
+    notifyListeners();
+  }
+
+  Future<bool> addNewRecord(Map<String, String> recordData) async {
+    _addDataStatus = Status.Fetching;
+    notifyListeners();
+    try {
+      await _apiService.addRecord(recordData);
+      _addDataStatus = Status.Fetched;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _addDataStatus = Status.Error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
     }
   }
 }
-

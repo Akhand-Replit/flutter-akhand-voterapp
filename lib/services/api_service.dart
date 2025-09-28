@@ -54,6 +54,56 @@ class ApiService {
     }
   }
 
+  // NEW: Method to get all batches
+  Future<List<Batch>> getBatches() async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Authentication token not found.');
+
+    final response = await http.get(
+      Uri.parse('$_baseUrl/api/batches/'),
+      headers: {
+        'Authorization': 'Token $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final List results = data['results'];
+      return results.map((e) => Batch.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load batches');
+    }
+  }
+
+  // NEW: Method to add a new record
+  Future<Record> addRecord(Map<String, String> recordData) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Authentication token not found.');
+
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/records/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(recordData),
+    );
+
+    if (response.statusCode == 201) { // 201 Created
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return Record.fromJson(data);
+    } else {
+      try {
+        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+        final errors = (errorData as Map<String, dynamic>).entries.map((e) => '${e.key}: ${e.value.join(', ')}').join('\n');
+        throw Exception('Failed to add record: $errors');
+      } catch (e) {
+         throw Exception('Failed to add record. Status code: ${response.statusCode}');
+      }
+    }
+  }
+
+
   Future<Map<String, dynamic>> searchRecords(Map<String, String> params) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -120,6 +170,22 @@ class ApiService {
 }
 
 // --- Data Models ---
+
+// NEW: Batch model
+class Batch {
+  final int id;
+  final String name;
+
+  Batch({required this.id, required this.name});
+
+  factory Batch.fromJson(Map<String, dynamic> json) {
+    return Batch(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+}
+
 class Event {
   final int id;
   final String name;
@@ -171,4 +237,3 @@ class Record {
     );
   }
 }
-

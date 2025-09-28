@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voter_app/providers/app_provider.dart';
+import 'package:voter_app/screens/add_record_modal.dart';
 import 'package:voter_app/services/api_service.dart'; // We need the Record and Event models
 
 class EventCollectorPage extends StatefulWidget {
@@ -157,6 +158,26 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
              const SizedBox(height: 16),
              Text('Search Results', style: Theme.of(context).textTheme.titleMedium),
             _buildRecordList(provider.searchedRecords, provider),
+            const SizedBox(height: 16),
+            // --- NEW: "Add New Record" Button ---
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddRecordPage(),
+                      fullscreenDialog: true, // Opens as a modal page
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal, // A different color to stand out
+                ),
+                child: const Text('Add New Record'),
+              ),
+            ),
           ],
         ),
       ),
@@ -222,4 +243,3 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
     );
   }
 }
-
