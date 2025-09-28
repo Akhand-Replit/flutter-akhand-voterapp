@@ -11,11 +11,11 @@ class EventCollectorPage extends StatefulWidget {
 }
 
 class _EventCollectorPageState extends State<EventCollectorPage> {
-  // Controllers for the search form
+  // --- UPDATED: Controllers for the new search form ---
   final _nameController = TextEditingController();
-  final _voterNoController = TextEditingController();
   final _fatherNameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _motherNameController = TextEditingController();
+  final _professionController = TextEditingController();
   final _addressController = TextEditingController();
 
   @override
@@ -29,21 +29,23 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
 
   @override
   void dispose() {
+    // --- UPDATED: Dispose new controllers ---
     _nameController.dispose();
-    _voterNoController.dispose();
     _fatherNameController.dispose();
-    _phoneController.dispose();
+    _motherNameController.dispose();
+    _professionController.dispose();
     _addressController.dispose();
     super.dispose();
   }
   
   void _performSearch() {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
+      // --- UPDATED: Search parameters to match new fields and Django backend ---
       final params = {
         'naam__icontains': _nameController.text,
-        'voter_no': _voterNoController.text,
         'pitar_naam__icontains': _fatherNameController.text,
-        'phone_number__icontains': _phoneController.text,
+        'matar_naam__icontains': _motherNameController.text,
+        'pesha__icontains': _professionController.text,
         'thikana__icontains': _addressController.text,
       };
       // Remove empty params before sending
@@ -136,13 +138,14 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
           children: [
             Text('Search for Records', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
+            // --- UPDATED: New search form fields ---
             TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
-            const SizedBox(height: 8),
-            TextField(controller: _voterNoController, decoration: const InputDecoration(labelText: 'Voter No', border: OutlineInputBorder())),
             const SizedBox(height: 8),
             TextField(controller: _fatherNameController, decoration: const InputDecoration(labelText: 'Father\'s Name', border: OutlineInputBorder())),
             const SizedBox(height: 8),
-            TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder())),
+            TextField(controller: _motherNameController, decoration: const InputDecoration(labelText: 'Mother\'s Name', border: OutlineInputBorder())),
+            const SizedBox(height: 8),
+            TextField(controller: _professionController, decoration: const InputDecoration(labelText: 'Profession', border: OutlineInputBorder())),
             const SizedBox(height: 8),
             TextField(controller: _addressController, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder())),
             const SizedBox(height: 16),
@@ -153,7 +156,7 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
             const Divider(),
              const SizedBox(height: 16),
              Text('Search Results', style: Theme.of(context).textTheme.titleMedium),
-            _buildRecordList(provider.searchedRecords, provider, 'search'),
+            _buildRecordList(provider.searchedRecords, provider),
           ],
         ),
       ),
@@ -170,31 +173,43 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
           children: [
             Text('Currently Connected Records', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            _buildRecordList(provider.connectedRecords, provider, 'connected'),
+            _buildRecordList(provider.connectedRecords, provider),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRecordList(List<Record> records, AppProvider provider, String listType) {
-    if (provider.eventDataStatus == Status.Fetching && listType != 'search') {
+  Widget _buildRecordList(List<Record> records, AppProvider provider) {
+    if (provider.eventDataStatus == Status.Fetching && records.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (records.isEmpty) {
       return Center(child: Text('No records found.', style: Theme.of(context).textTheme.bodyMedium));
     }
 
-    return ListView.builder(
+    return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: records.length,
+      separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         final record = records[index];
         final isConnected = provider.connectedRecordIds.contains(record.id);
+        
+        // --- UPDATED: Search result card layout ---
         return ListTile(
-          title: Text(record.naam),
-          subtitle: Text('Voter No: ${record.voterNo ?? 'N/A'}'),
+          title: Text(record.naam, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text('Father: ${record.pitarNaam ?? 'N/A'}'),
+              Text('Mother: ${record.matarNaam ?? 'N/A'}'),
+              Text('Age: ${record.age?.toString() ?? 'N/A'}'),
+              Text('Batch: ${record.batchName ?? 'N/A'}'),
+            ],
+          ),
           trailing: ElevatedButton(
             onPressed: () => provider.toggleRecordConnection(record),
             style: ElevatedButton.styleFrom(
@@ -207,3 +222,4 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
     );
   }
 }
+

@@ -3,13 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // --- IMPORTANT ---
-  // Use http://10.0.2.2:8000/ for Android Emulator connecting to a localhost server.
-  // For a physical device, replace with your computer's network IP address (e.g., http://192.168.1.10:8000/).
-  // For production, replace with your live server's URL.
   static const String _baseUrl = 'https://dakhandvoter.akhandapps.com';
 
-  // Function to handle user login
   Future<String?> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/get-token/'),
@@ -26,23 +21,19 @@ class ApiService {
       final data = jsonDecode(response.body);
       final token = data['token'];
       if (token != null) {
-        // Save the token securely
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('authToken', token);
         return token;
       }
     }
-    // If login fails, return null
     return null;
   }
 
-  // Helper function to get the auth token from storage
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('authToken');
   }
 
-  // Function to get a list of all available events
   Future<List<Event>> getEvents() async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -55,7 +46,6 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      // The backend response is paginated, so we access the 'results'
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       final List results = data['results'];
       return results.map((e) => Event.fromJson(e)).toList();
@@ -64,12 +54,10 @@ class ApiService {
     }
   }
 
-  // Function to search for voter records based on provided criteria
   Future<Map<String, dynamic>> searchRecords(Map<String, String> params) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
 
-    // Build the query string from the params map
     final uri = Uri.parse('$_baseUrl/api/records/').replace(queryParameters: params);
 
     final response = await http.get(
@@ -90,7 +78,6 @@ class ApiService {
     }
   }
   
-    // Function to get records for a specific event
   Future<Map<String, dynamic>> getRecordsForEvent(int eventId) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -113,8 +100,6 @@ class ApiService {
     }
   }
 
-
-  // Function to connect or disconnect a record from an event
   Future<void> assignEventsToRecord(int recordId, List<int> eventIds) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -135,8 +120,6 @@ class ApiService {
 }
 
 // --- Data Models ---
-
-// A simple data model for an Event
 class Event {
   final int id;
   final String name;
@@ -151,7 +134,6 @@ class Event {
   }
 }
 
-// A simple data model for a Record
 class Record {
   final int id;
   final String naam;
@@ -161,6 +143,7 @@ class Record {
   final int? age;
   final String? batchName;
   final List<String> eventNames;
+  final String? pesha;
 
   Record({
     required this.id,
@@ -171,6 +154,7 @@ class Record {
     this.age,
     this.batchName,
     required this.eventNames,
+    this.pesha,
   });
 
   factory Record.fromJson(Map<String, dynamic> json) {
@@ -183,6 +167,7 @@ class Record {
       age: json['age'],
       batchName: json['batch_name'],
       eventNames: List<String>.from(json['event_names'] ?? []),
+      pesha: json['pesha'],
     );
   }
 }
