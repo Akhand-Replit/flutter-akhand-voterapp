@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 
 // Enum to represent the current status of data fetching
@@ -156,10 +157,12 @@ class AppProvider with ChangeNotifier {
     final fullRecord = recordDetailsData['records'].first;
 
     final allEvents = await _apiService.getEvents();
-    List<int> currentEventIds = fullRecord.eventNames.map((name) {
+    
+    // This is the line that's fixed
+    List<int> currentEventIds = List<int>.from(fullRecord.eventNames.map((name) {
         final event = allEvents.firstWhere((e) => e.name == name, orElse: () => Event(id: -1, name: ''));
         return event.id;
-    }).where((id) => id != -1).toList();
+    }).where((id) => id != -1));
 
     if (isConnected) {
       // Disconnect
@@ -182,3 +185,4 @@ class AppProvider with ChangeNotifier {
     }
   }
 }
+
