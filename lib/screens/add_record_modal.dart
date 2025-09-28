@@ -21,6 +21,8 @@ class _AddRecordPageState extends State<AddRecordPage> {
   final _dobController = TextEditingController();
   final _addressController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _whatsappController = TextEditingController();
 
   Batch? _selectedBatch;
 
@@ -42,6 +44,8 @@ class _AddRecordPageState extends State<AddRecordPage> {
     _dobController.dispose();
     _addressController.dispose();
     _descriptionController.dispose();
+    _phoneController.dispose();
+    _whatsappController.dispose();
     super.dispose();
   }
 
@@ -49,17 +53,31 @@ class _AddRecordPageState extends State<AddRecordPage> {
     if (_formKey.currentState!.validate()) {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
 
+      // Build the data map, only including optional fields if they are not empty.
+      // This is the key fix for the 400 error.
       final recordData = {
         'naam': _nameController.text,
         'pitar_naam': _fatherNameController.text,
         'matar_naam': _motherNameController.text,
-        'pesha': _professionController.text,
-        'jonmo_tarikh': _dobController.text,
         'thikana': _addressController.text,
-        'description': _descriptionController.text,
         'batch': _selectedBatch!.id.toString(),
-        // Add other non-required fields if they have values
       };
+
+      if (_professionController.text.isNotEmpty) {
+        recordData['pesha'] = _professionController.text;
+      }
+      if (_dobController.text.isNotEmpty) {
+        recordData['jonmo_tarikh'] = _dobController.text;
+      }
+      if (_descriptionController.text.isNotEmpty) {
+        recordData['description'] = _descriptionController.text;
+      }
+      if (_phoneController.text.isNotEmpty) {
+        recordData['phone_number'] = _phoneController.text;
+      }
+      if (_whatsappController.text.isNotEmpty) {
+        recordData['whatsapp_number'] = _whatsappController.text;
+      }
 
       final success = await appProvider.addNewRecord(recordData);
 
@@ -129,6 +147,17 @@ class _AddRecordPageState extends State<AddRecordPage> {
                       controller: _dobController,
                       labelText: "Date of Birth (e.g., 10/05/1990)"),
                   const SizedBox(height: 16),
+                  // --- NEW FIELDS ADDED ---
+                  _buildTextField(
+                      controller: _phoneController,
+                      labelText: "Phone Number",
+                      keyboardType: TextInputType.phone),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                      controller: _whatsappController,
+                      labelText: "WhatsApp Number",
+                      keyboardType: TextInputType.phone),
+                  const SizedBox(height: 16),
                   _buildTextField(
                       controller: _descriptionController,
                       labelText: "Description",
@@ -159,10 +188,12 @@ class _AddRecordPageState extends State<AddRecordPage> {
     required String labelText,
     bool isRequired = false,
     int maxLines = 1,
+    TextInputType? keyboardType,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: labelText + (isRequired ? ' (Required)' : ''),
         border: const OutlineInputBorder(),

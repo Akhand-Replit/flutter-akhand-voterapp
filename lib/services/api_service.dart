@@ -54,7 +54,6 @@ class ApiService {
     }
   }
 
-  // NEW: Method to get all batches
   Future<List<Batch>> getBatches() async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -75,7 +74,6 @@ class ApiService {
     }
   }
 
-  // NEW: Method to add a new record
   Future<Record> addRecord(Map<String, String> recordData) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -171,7 +169,6 @@ class ApiService {
 
 // --- Data Models ---
 
-// NEW: Batch model
 class Batch {
   final int id;
   final String name;
@@ -210,6 +207,10 @@ class Record {
   final String? batchName;
   final List<String> eventNames;
   final String? pesha;
+  // --- NEW FIELDS ADDED ---
+  final String? phoneNumber;
+  final String? whatsappNumber;
+
 
   Record({
     required this.id,
@@ -221,6 +222,8 @@ class Record {
     this.batchName,
     required this.eventNames,
     this.pesha,
+    this.phoneNumber,
+    this.whatsappNumber,
   });
 
   factory Record.fromJson(Map<String, dynamic> json) {
@@ -234,6 +237,9 @@ class Record {
       batchName: json['batch_name'],
       eventNames: List<String>.from(json['event_names'] ?? []),
       pesha: json['pesha'],
+      phoneNumber: json['phone_number'],
+      whatsappNumber: json['whatsapp_number'],
     );
   }
 }
+
