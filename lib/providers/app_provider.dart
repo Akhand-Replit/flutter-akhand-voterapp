@@ -21,9 +21,9 @@ class AppProvider with ChangeNotifier {
   Set<int> _connectedRecordIds = {};
   String _errorMessage = '';
 
-  // --- NEW: State for Add Record Page ---
+  // --- NEW: State for Add/Edit Record ---
   Status _batchListStatus = Status.Uninitialized;
-  Status _addDataStatus = Status.Uninitialized;
+  Status _recordMutationStatus = Status.Uninitialized; // For both add and update
   List<Batch> _batchesForAdd = [];
 
 
@@ -37,9 +37,9 @@ class AppProvider with ChangeNotifier {
   Set<int> get connectedRecordIds => _connectedRecordIds;
   String get errorMessage => _errorMessage;
 
-  // --- NEW: Getters for Add Record Page ---
+  // --- NEW: Getters for Add/Edit Record ---
   Status get batchListStatus => _batchListStatus;
-  Status get addDataStatus => _addDataStatus;
+  Status get recordMutationStatus => _recordMutationStatus;
   List<Batch> get batchesForAdd => _batchesForAdd;
 
   AppProvider() {
@@ -100,9 +100,8 @@ class AppProvider with ChangeNotifier {
       _connectedRecords = [];
       _connectedRecordIds = {};
       _errorMessage = '';
-      // --- NEW: Reset add record state ---
       _batchListStatus = Status.Uninitialized;
-      _addDataStatus = Status.Uninitialized;
+      _recordMutationStatus = Status.Uninitialized;
       _batchesForAdd = [];
   }
 
@@ -150,6 +149,7 @@ class AppProvider with ChangeNotifier {
 
   Future<void> searchVoterRecords(Map<String, String> params) async {
     _eventDataStatus = Status.Fetching;
+    _searchedRecords = []; // Clear previous results
     notifyListeners();
     try {
       final data = await _apiService.searchRecords(params);
@@ -167,7 +167,6 @@ class AppProvider with ChangeNotifier {
 
     final isConnected = _connectedRecordIds.contains(record.id);
     
-    // First, get the record's current list of events to preserve other connections
     final recordDetailsData = await _apiService.searchRecords({'id': record.id.toString()});
     final fullRecord = recordDetailsData['records'].first;
 
@@ -179,10 +178,8 @@ class AppProvider with ChangeNotifier {
     }).where((id) => id != -1));
 
     if (isConnected) {
-      // Disconnect
       currentEventIds.remove(_selectedEvent!.id);
     } else {
-      // Connect
       if (!currentEventIds.contains(_selectedEvent!.id)) {
         currentEventIds.add(_selectedEvent!.id);
       }
@@ -190,7 +187,6 @@ class AppProvider with ChangeNotifier {
 
     try {
       await _apiService.assignEventsToRecord(record.id, currentEventIds);
-      // Refresh the connected records list to show the change
       await fetchConnectedRecords(_selectedEvent!.id);
     } catch (e) {
       _errorMessage = e.toString();
@@ -198,7 +194,7 @@ class AppProvider with ChangeNotifier {
     }
   }
 
-  // --- NEW: Add Record Methods ---
+  // --- Add/Edit Record Methods ---
 
   Future<void> fetchBatchesForAdd() async {
     _batchListStatus = Status.Fetching;
@@ -214,15 +210,45 @@ class AppProvider with ChangeNotifier {
   }
 
   Future<bool> addNewRecord(Map<String, String> recordData) async {
-    _addDataStatus = Status.Fetching;
+    _recordMutationStatus = Status.Fetching;
     notifyListeners();
     try {
       await _apiService.addRecord(recordData);
-      _addDataStatus = Status.Fetched;
+      _recordMutationStatus = Status.Fetched;
+      notifyListeners();
+      // After adding, refresh the search results if there was a search term
+      if (_searchedRecords.isNotEmpty) {
+        // This is a simplification. A more robust solution might re-run the last search.
+        // For now, we'll just clear it.
+        _searchedRecords = [];
+      }
+      return true;
+    } catch (e) {
+      _recordMutationStatus = Status.Error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // NEW: Method to handle updating a record
+  Future<bool> updateVoterRecord(int recordId, Map<String, dynamic> data) async {
+    _recordMutationStatus = Status.Fetching;
+    notifyListeners();
+    try {
+      await _apiService.updateRecord(recordId, data);
+      _recordMutationStatus = Status.Fetched;
+      // Refresh connected records if an event is selected
+      if (_selectedEvent != null) {
+        fetchConnectedRecords(_selectedEvent!.id);
+      }
+      // You may want to refresh the search list as well if needed
+      // For now just clear it to avoid stale data
+      _searchedRecords = [];
       notifyListeners();
       return true;
     } catch (e) {
-      _addDataStatus = Status.Error;
+      _recordMutationStatus = Status.Error;
       _errorMessage = e.toString();
       notifyListeners();
       return false;

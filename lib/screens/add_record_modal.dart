@@ -15,7 +15,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
 
   // Controllers for text fields
   final _nameController = TextEditingController();
-  final _kromikNoController = TextEditingController(); // ADDED
+  final _kromikNoController = TextEditingController();
   final _fatherNameController = TextEditingController();
   final _motherNameController = TextEditingController();
   final _professionController = TextEditingController();
@@ -39,7 +39,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
   @override
   void dispose() {
     _nameController.dispose();
-    _kromikNoController.dispose(); // ADDED
+    _kromikNoController.dispose();
     _fatherNameController.dispose();
     _motherNameController.dispose();
     _professionController.dispose();
@@ -58,7 +58,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
       // Build the data map, only including optional fields if they are not empty.
       final recordData = {
         'naam': _nameController.text,
-        'kromik_no': _kromikNoController.text, // ADDED
+        'kromik_no': _kromikNoController.text,
         'pitar_naam': _fatherNameController.text,
         'matar_naam': _motherNameController.text,
         'thikana': _addressController.text,
@@ -125,7 +125,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
                       isRequired: true),
                   const SizedBox(height: 16),
                   _buildTextField(
-                      controller: _kromikNoController, // ADDED
+                      controller: _kromikNoController,
                       labelText: "Kromik No (Serial)",
                       isRequired: true),
                   const SizedBox(height: 16),
@@ -170,10 +170,10 @@ class _AddRecordPageState extends State<AddRecordPage> {
                       maxLines: 3),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: provider.addDataStatus == Status.Fetching
+                    onPressed: provider.recordMutationStatus == Status.Fetching
                         ? null
                         : _saveRecord,
-                    child: provider.addDataStatus == Status.Fetching
+                    child: provider.recordMutationStatus == Status.Fetching
                         ? const CircularProgressIndicator(
                             valueColor:
                                 AlwaysStoppedAnimation<Color>(Colors.white),
@@ -253,4 +253,3 @@ class _AddRecordPageState extends State<AddRecordPage> {
     );
   }
 }
-

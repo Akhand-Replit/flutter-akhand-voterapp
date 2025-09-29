@@ -101,7 +101,6 @@ class ApiService {
     }
   }
 
-
   Future<Map<String, dynamic>> searchRecords(Map<String, String> params) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -165,6 +164,27 @@ class ApiService {
       throw Exception('Failed to update event connection.');
     }
   }
+
+  // NEW: Method to update a record
+  Future<Record> updateRecord(int recordId, Map<String, dynamic> data) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Authentication token not found.');
+
+    final response = await http.patch(
+      Uri.parse('$_baseUrl/api/records/$recordId/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      return Record.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
+    } else {
+      throw Exception('Failed to update record. Status: ${response.statusCode}');
+    }
+  }
 }
 
 // --- Data Models ---
@@ -200,48 +220,82 @@ class Event {
 class Record {
   final int id;
   final String naam;
-  final String? kromikNo; // ADDED
+  final String? kromikNo;
   final String? voterNo;
   final String? pitarNaam;
   final String? matarNaam;
+  final String? pesha;
+  final String? occupationDetails;
+  final String? jonmoTarikh;
+  final String? thikana;
+  final String? phoneNumber;
+  final String? whatsappNumber;
+  final String? facebookLink;
+  final String? tiktokLink;
+  final String? youtubeLink;
+  final String? instaLink;
+  final String? photoLink;
+  final String? description;
+  final String? politicalStatus;
+  final String? relationshipStatus;
+  final String? gender;
   final int? age;
   final String? batchName;
   final List<String> eventNames;
-  final String? pesha;
-  final String? phoneNumber;
-  final String? whatsappNumber;
-
 
   Record({
     required this.id,
     required this.naam,
-    this.kromikNo, // ADDED
+    this.kromikNo,
     this.voterNo,
     this.pitarNaam,
     this.matarNaam,
+    this.pesha,
+    this.occupationDetails,
+    this.jonmoTarikh,
+    this.thikana,
+    this.phoneNumber,
+    this.whatsappNumber,
+    this.facebookLink,
+    this.tiktokLink,
+    this.youtubeLink,
+    this.instaLink,
+    this.photoLink,
+    this.description,
+    this.politicalStatus,
+    this.relationshipStatus,
+    this.gender,
     this.age,
     this.batchName,
     required this.eventNames,
-    this.pesha,
-    this.phoneNumber,
-    this.whatsappNumber,
   });
 
   factory Record.fromJson(Map<String, dynamic> json) {
     return Record(
       id: json['id'],
       naam: json['naam'] ?? 'N/A',
-      kromikNo: json['kromik_no'], // ADDED
+      kromikNo: json['kromik_no'],
       voterNo: json['voter_no'],
       pitarNaam: json['pitar_naam'],
       matarNaam: json['matar_naam'],
+      pesha: json['pesha'],
+      occupationDetails: json['occupation_details'],
+      jonmoTarikh: json['jonmo_tarikh'],
+      thikana: json['thikana'],
+      phoneNumber: json['phone_number'],
+      whatsappNumber: json['whatsapp_number'],
+      facebookLink: json['facebook_link'],
+      tiktokLink: json['tiktok_link'],
+      youtubeLink: json['youtube_link'],
+      instaLink: json['insta_link'],
+      photoLink: json['photo_link'],
+      description: json['description'],
+      politicalStatus: json['political_status'],
+      relationshipStatus: json['relationship_status'],
+      gender: json['gender'],
       age: json['age'],
       batchName: json['batch_name'],
       eventNames: List<String>.from(json['event_names'] ?? []),
-      pesha: json['pesha'],
-      phoneNumber: json['phone_number'],
-      whatsappNumber: json['whatsapp_number'],
     );
   }
 }
-
