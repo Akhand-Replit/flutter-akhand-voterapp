@@ -15,6 +15,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
 
   // Controllers for text fields
   final _nameController = TextEditingController();
+  final _kromikNoController = TextEditingController(); // ADDED
   final _fatherNameController = TextEditingController();
   final _motherNameController = TextEditingController();
   final _professionController = TextEditingController();
@@ -38,6 +39,7 @@ class _AddRecordPageState extends State<AddRecordPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _kromikNoController.dispose(); // ADDED
     _fatherNameController.dispose();
     _motherNameController.dispose();
     _professionController.dispose();
@@ -54,9 +56,9 @@ class _AddRecordPageState extends State<AddRecordPage> {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
 
       // Build the data map, only including optional fields if they are not empty.
-      // This is the key fix for the 400 error.
       final recordData = {
         'naam': _nameController.text,
+        'kromik_no': _kromikNoController.text, // ADDED
         'pitar_naam': _fatherNameController.text,
         'matar_naam': _motherNameController.text,
         'thikana': _addressController.text,
@@ -123,6 +125,11 @@ class _AddRecordPageState extends State<AddRecordPage> {
                       isRequired: true),
                   const SizedBox(height: 16),
                   _buildTextField(
+                      controller: _kromikNoController, // ADDED
+                      labelText: "Kromik No (Serial)",
+                      isRequired: true),
+                  const SizedBox(height: 16),
+                  _buildTextField(
                       controller: _fatherNameController,
                       labelText: "Father's Name",
                       isRequired: true),
@@ -147,7 +154,6 @@ class _AddRecordPageState extends State<AddRecordPage> {
                       controller: _dobController,
                       labelText: "Date of Birth (e.g., 10/05/1990)"),
                   const SizedBox(height: 16),
-                  // --- NEW FIELDS ADDED ---
                   _buildTextField(
                       controller: _phoneController,
                       labelText: "Phone Number",
@@ -247,3 +253,4 @@ class _AddRecordPageState extends State<AddRecordPage> {
     );
   }
 }
+

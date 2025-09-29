@@ -61,7 +61,7 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Event Data Collector'),
+        title: const Text('Akhand Data - Event Data Collector'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

@@ -200,6 +200,7 @@ class Event {
 class Record {
   final int id;
   final String naam;
+  final String? kromikNo; // ADDED
   final String? voterNo;
   final String? pitarNaam;
   final String? matarNaam;
@@ -207,7 +208,6 @@ class Record {
   final String? batchName;
   final List<String> eventNames;
   final String? pesha;
-  // --- NEW FIELDS ADDED ---
   final String? phoneNumber;
   final String? whatsappNumber;
 
@@ -215,6 +215,7 @@ class Record {
   Record({
     required this.id,
     required this.naam,
+    this.kromikNo, // ADDED
     this.voterNo,
     this.pitarNaam,
     this.matarNaam,
@@ -230,6 +231,7 @@ class Record {
     return Record(
       id: json['id'],
       naam: json['naam'] ?? 'N/A',
+      kromikNo: json['kromik_no'], // ADDED
       voterNo: json['voter_no'],
       pitarNaam: json['pitar_naam'],
       matarNaam: json['matar_naam'],
