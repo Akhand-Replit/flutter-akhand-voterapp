@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voter_app/providers/app_provider.dart';
 import 'package:voter_app/screens/add_record_modal.dart';
-import 'package:voter_app/services/api_service.dart'; // We need the Record and Event models
+import 'package:voter_app/screens/edit_record_modal.dart'; // Import the new modal
+import 'package:voter_app/services/api_service.dart';
 
 class EventCollectorPage extends StatefulWidget {
   const EventCollectorPage({Key? key}) : super(key: key);
@@ -12,7 +13,6 @@ class EventCollectorPage extends StatefulWidget {
 }
 
 class _EventCollectorPageState extends State<EventCollectorPage> {
-  // --- UPDATED: Controllers for the new search form ---
   final _nameController = TextEditingController();
   final _fatherNameController = TextEditingController();
   final _motherNameController = TextEditingController();
@@ -22,7 +22,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch the list of events as soon as the page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AppProvider>(context, listen: false).fetchEvents();
     });
@@ -30,7 +29,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
 
   @override
   void dispose() {
-    // --- UPDATED: Dispose new controllers ---
     _nameController.dispose();
     _fatherNameController.dispose();
     _motherNameController.dispose();
@@ -41,7 +39,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
   
   void _performSearch() {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
-      // --- UPDATED: Search parameters to match new fields and Django backend ---
       final params = {
         'naam__icontains': _nameController.text,
         'pitar_naam__icontains': _fatherNameController.text,
@@ -49,7 +46,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
         'pesha__icontains': _professionController.text,
         'thikana__icontains': _addressController.text,
       };
-      // Remove empty params before sending
       params.removeWhere((key, value) => value.isEmpty);
       
       if (params.isNotEmpty) {
@@ -76,10 +72,7 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
           return ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
-              // Event Selection Card
               _buildEventSelectionCard(provider),
-              
-              // Show Search and Connected lists only if an event is selected
               if (provider.selectedEvent != null) ...[
                 const SizedBox(height: 16),
                 _buildSearchCard(provider),
@@ -139,7 +132,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
           children: [
             Text('Search for Records', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            // --- UPDATED: New search form fields ---
             TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
             const SizedBox(height: 8),
             TextField(controller: _fatherNameController, decoration: const InputDecoration(labelText: 'Father\'s Name', border: OutlineInputBorder())),
@@ -159,7 +151,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
              Text('Search Results', style: Theme.of(context).textTheme.titleMedium),
             _buildRecordList(provider.searchedRecords, provider),
             const SizedBox(height: 16),
-            // --- NEW: "Add New Record" Button ---
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -168,12 +159,12 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const AddRecordPage(),
-                      fullscreenDialog: true, // Opens as a modal page
+                      fullscreenDialog: true,
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal, // A different color to stand out
+                  backgroundColor: Colors.teal,
                 ),
                 child: const Text('Add New Record'),
               ),
@@ -218,7 +209,6 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
         final record = records[index];
         final isConnected = provider.connectedRecordIds.contains(record.id);
         
-        // --- UPDATED: Search result card layout ---
         return ListTile(
           title: Text(record.naam, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Column(
@@ -231,15 +221,34 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
               Text('Batch: ${record.batchName ?? 'N/A'}'),
             ],
           ),
-          trailing: ElevatedButton(
-            onPressed: () => provider.toggleRecordConnection(record),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isConnected ? Colors.redAccent : Colors.green,
-            ),
-            child: Text(isConnected ? 'Disconnect' : 'Connect'),
+          trailing: Row( // <-- FIX: Changed Column to Row
+            mainAxisSize: MainAxisSize.min, // <-- FIX: Added to keep Row compact
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditRecordModal(record: record),
+                      fullscreenDialog: true,
+                    ),
+                  );
+                },
+                child: const Text('View'),
+              ),
+              const SizedBox(width: 8), // <-- FIX: Added spacing between buttons
+              ElevatedButton(
+                onPressed: () => provider.toggleRecordConnection(record),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isConnected ? Colors.redAccent : Colors.green,
+                ),
+                child: Text(isConnected ? 'Disconnect' : 'Connect'),
+              ),
+            ],
           ),
         );
       },
     );
   }
 }
+
