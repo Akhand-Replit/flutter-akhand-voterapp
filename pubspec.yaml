@@ -14,6 +14,7 @@ dependencies:
   provider: ^6.1.2
   http: ^1.2.1
   shared_preferences: ^2.2.3
+  image_picker: ^1.1.2 # <-- ADD THIS LINE
 
   cupertino_icons: ^1.0.8
 
@@ -32,4 +33,3 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
-

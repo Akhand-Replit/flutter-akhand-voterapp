@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 
 // Enum to represent the current status of data fetching
-enum Status { Uninitialized, Authenticating, Authenticated, Unauthenticated, Fetching, Fetched, Error }
+enum Status { Uninitialized, Authenticating, Authenticated, Unauthenticated, Fetching, Fetched, Error, Uploading }
 
 class AppProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -262,6 +263,32 @@ class AppProvider with ChangeNotifier {
       return false;
     }
   }
+  
+  // --- NEW: IMAGE UPLOAD METHOD ---
+  Future<String?> uploadAndUpdatePhotoLink(XFile image) async {
+    _recordMutationStatus = Status.Uploading;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      // 1. Upload to ImgBB
+      final imageUrl = await _apiService.uploadImageToImgBB(image);
+      if (imageUrl == null) {
+        throw Exception('Failed to get image URL from upload service.');
+      }
+      
+      _recordMutationStatus = Status.Fetched;
+      notifyListeners();
+      return imageUrl;
+
+    } catch (e) {
+      _recordMutationStatus = Status.Error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+  // ------------------------------
 
   // --- NEW: Family Management Methods ---
 
@@ -307,4 +334,3 @@ class AppProvider with ChangeNotifier {
     }
   }
 }
-

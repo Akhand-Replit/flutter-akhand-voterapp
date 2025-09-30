@@ -1,9 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String _baseUrl = 'https://dakhandvoter.akhandapps.com';
+
+  // --- ADD THIS SECTION ---
+  // TODO: Replace with your own ImgBB API key from https://api.imgbb.com/
+  static const String _imgbbApiKey = 'ec519cb1c1643a46e16f22fe58a256cb';
+  static const String _imgbbUploadUrl = 'https://api.imgbb.com/1/upload';
+  // -------------------------
 
   Future<String?> login(String username, String password) async {
     final response = await http.post(
@@ -28,6 +37,38 @@ class ApiService {
     }
     return null;
   }
+
+  // --- ADD THIS NEW METHOD for ImgBB Upload ---
+  Future<String?> uploadImageToImgBB(XFile image) async {
+    var uri = Uri.parse(_imgbbUploadUrl);
+    var request = http.MultipartRequest('POST', uri)
+      ..fields['key'] = _imgbbApiKey;
+
+    final fileBytes = await image.readAsBytes();
+
+    request.files.add(http.MultipartFile.fromBytes(
+      'image',
+      fileBytes,
+      filename: image.name,
+      contentType: MediaType('image', image.name.split('.').last),
+    ));
+
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['data']['url'];
+      } else {
+        throw Exception(
+            'Failed to upload image. Status code: ${response.statusCode}, Body: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error uploading image: $e');
+    }
+  }
+  // ------------------------------------------
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -124,7 +165,7 @@ class ApiService {
       throw Exception('Failed to search records');
     }
   }
-  
+
   Future<Map<String, dynamic>> getRecordsForEvent(int eventId) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -382,4 +423,3 @@ class FamilyRelationship {
     );
   }
 }
-
