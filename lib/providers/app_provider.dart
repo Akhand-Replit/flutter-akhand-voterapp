@@ -27,10 +27,9 @@ class AppProvider with ChangeNotifier {
   Status _recordMutationStatus = Status.Uninitialized; // For both add and update
   List<Batch> _batchesForAdd = [];
 
-  // --- NEW: State for Family Management ---
+  // State for Family Management
   Status _familyStatus = Status.Uninitialized;
   List<FamilyRelationship> _familyMembers = [];
-
 
   // Getters
   Status get authStatus => _authStatus;
@@ -44,16 +43,12 @@ class AppProvider with ChangeNotifier {
   Status get batchListStatus => _batchListStatus;
   Status get recordMutationStatus => _recordMutationStatus;
   List<Batch> get batchesForAdd => _batchesForAdd;
-
-  // --- NEW: Getters for Family Management ---
   Status get familyStatus => _familyStatus;
   List<FamilyRelationship> get familyMembers => _familyMembers;
 
   AppProvider() {
     _checkLoginStatus();
   }
-
-  // --- Authentication Methods ---
 
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
@@ -110,12 +105,9 @@ class AppProvider with ChangeNotifier {
       _batchListStatus = Status.Uninitialized;
       _recordMutationStatus = Status.Uninitialized;
       _batchesForAdd = [];
-      // --- NEW: Reset family state ---
       _familyStatus = Status.Uninitialized;
       _familyMembers = [];
   }
-
-  // --- Event Collector Methods ---
 
   Future<void> fetchEvents() async {
     _eventDataStatus = Status.Fetching;
@@ -172,7 +164,6 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // --- NEW: Clear search results ---
   void clearSearchResults() {
     _searchedRecords = [];
     notifyListeners();
@@ -210,8 +201,6 @@ class AppProvider with ChangeNotifier {
     }
   }
 
-  // --- Add/Edit Record Methods ---
-
   Future<void> fetchBatchesForAdd() async {
     _batchListStatus = Status.Fetching;
     notifyListeners();
@@ -235,12 +224,12 @@ class AppProvider with ChangeNotifier {
       if (_searchedRecords.isNotEmpty) {
         _searchedRecords = [];
       }
-      return newRecord; // Return the created record
+      return newRecord;
     } catch (e) {
       _recordMutationStatus = Status.Error;
       _errorMessage = e.toString();
       notifyListeners();
-      return null; // Return null on failure
+      return null;
     }
   }
 
@@ -264,14 +253,13 @@ class AppProvider with ChangeNotifier {
     }
   }
   
-  // --- NEW: IMAGE UPLOAD METHOD ---
-  Future<String?> uploadAndUpdatePhotoLink(XFile image) async {
+  /// Handles the entire image upload flow and returns the URL.
+  Future<String?> uploadImage(XFile image) async {
     _recordMutationStatus = Status.Uploading;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      // 1. Upload to ImgBB
       final imageUrl = await _apiService.uploadImageToImgBB(image);
       if (imageUrl == null) {
         throw Exception('Failed to get image URL from upload service.');
@@ -288,9 +276,6 @@ class AppProvider with ChangeNotifier {
       return null;
     }
   }
-  // ------------------------------
-
-  // --- NEW: Family Management Methods ---
 
   Future<void> fetchFamilyMembers(int personId) async {
     _familyStatus = Status.Fetching;

@@ -27,16 +27,16 @@ class _EditRecordModalState extends State<EditRecordModal>
   late TextEditingController _instagramController;
   late TextEditingController _tiktokController;
   late TextEditingController _youtubeController;
-  late TextEditingController _photoLinkController; // <-- ADDED
+  late TextEditingController _photoLinkController;
 
   String? _relationshipStatus;
   late TabController _tabController;
-  final ImagePicker _picker = ImagePicker(); // <-- ADDED
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this); // <-- CHANGED to 5
+    _tabController = TabController(length: 5, vsync: this);
 
     // Initialize text controllers
     _initializeControllers();
@@ -62,7 +62,7 @@ class _EditRecordModalState extends State<EditRecordModal>
     _tiktokController = TextEditingController(text: widget.record.tiktokLink);
     _youtubeController = TextEditingController(text: widget.record.youtubeLink);
     _photoLinkController =
-        TextEditingController(text: widget.record.photoLink); // <-- ADDED
+        TextEditingController(text: widget.record.photoLink);
     _relationshipStatus = widget.record.relationshipStatus;
   }
 
@@ -78,7 +78,7 @@ class _EditRecordModalState extends State<EditRecordModal>
     _instagramController.dispose();
     _tiktokController.dispose();
     _youtubeController.dispose();
-    _photoLinkController.dispose(); // <-- ADDED
+    _photoLinkController.dispose();
     super.dispose();
   }
 
@@ -97,7 +97,7 @@ class _EditRecordModalState extends State<EditRecordModal>
         'insta_link': _instagramController.text,
         'tiktok_link': _tiktokController.text,
         'youtube_link': _youtubeController.text,
-        'photo_link': _photoLinkController.text, // <-- ADDED
+        'photo_link': _photoLinkController.text,
       };
 
       final success =
@@ -131,18 +131,17 @@ class _EditRecordModalState extends State<EditRecordModal>
     );
   }
 
-  // --- NEW: Method to handle image picking and uploading ---
   Future<void> _pickImage(ImageSource source) async {
     final appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
-        imageQuality: 80, // Compress image slightly
-        maxWidth: 800, // Resize image
+        imageQuality: 80,
+        maxWidth: 800,
       );
 
       if (pickedFile != null) {
-        final imageUrl = await appProvider.uploadAndUpdatePhotoLink(pickedFile);
+        final imageUrl = await appProvider.uploadImage(pickedFile);
 
         if (mounted && imageUrl != null) {
           setState(() {
@@ -175,7 +174,6 @@ class _EditRecordModalState extends State<EditRecordModal>
       }
     }
   }
-  // -----------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +185,7 @@ class _EditRecordModalState extends State<EditRecordModal>
           tabs: const [
             Tab(icon: Icon(Icons.info_outline), text: 'Info'),
             Tab(icon: Icon(Icons.contact_phone_outlined), text: 'Contact & Soc'),
-            Tab(icon: Icon(Icons.image_outlined), text: 'Photo'), // <-- ADDED
+            Tab(icon: Icon(Icons.image_outlined), text: 'Photo'),
             Tab(icon: Icon(Icons.notes_outlined), text: 'Details'),
             Tab(icon: Icon(Icons.people_alt_outlined), text: 'Family'),
           ],
@@ -202,7 +200,7 @@ class _EditRecordModalState extends State<EditRecordModal>
               children: [
                 _buildInfoTab(),
                 _buildContactSocialTab(),
-                _buildPhotoTab(), // <-- ADDED
+                _buildPhotoTab(),
                 _buildDetailsTab(),
                 _buildFamilyTab(),
               ],
@@ -224,8 +222,6 @@ class _EditRecordModalState extends State<EditRecordModal>
       }),
     );
   }
-
-  // --- Tab Widgets ---
 
   Widget _buildInfoTab() {
     return ListView(
@@ -278,7 +274,6 @@ class _EditRecordModalState extends State<EditRecordModal>
     );
   }
   
-  // --- NEW: Photo Tab UI ---
   Widget _buildPhotoTab() {
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
@@ -368,7 +363,6 @@ class _EditRecordModalState extends State<EditRecordModal>
       },
     );
   }
-  // -------------------------
 
   Widget _buildDetailsTab() {
     return ListView(
@@ -478,7 +472,6 @@ class _EditRecordModalState extends State<EditRecordModal>
     );
   }
 
-  // --- Reusable Field Widgets ---
   Widget _buildReadOnlyField(String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),

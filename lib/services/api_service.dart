@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,11 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static const String _baseUrl = 'https://dakhandvoter.akhandapps.com';
 
-  // --- ADD THIS SECTION ---
-  // TODO: Replace with your own ImgBB API key from https://api.imgbb.com/
+  // ImgBB API Configuration
+  // IMPORTANT: Replace with your own ImgBB API key if needed.
   static const String _imgbbApiKey = 'ec519cb1c1643a46e16f22fe58a256cb';
   static const String _imgbbUploadUrl = 'https://api.imgbb.com/1/upload';
-  // -------------------------
 
   Future<String?> login(String username, String password) async {
     final response = await http.post(
@@ -38,7 +36,7 @@ class ApiService {
     return null;
   }
 
-  // --- ADD THIS NEW METHOD for ImgBB Upload ---
+  /// Uploads an image file to ImgBB and returns the direct URL.
   Future<String?> uploadImageToImgBB(XFile image) async {
     var uri = Uri.parse(_imgbbUploadUrl);
     var request = http.MultipartRequest('POST', uri)
@@ -68,7 +66,6 @@ class ApiService {
       throw Exception('Error uploading image: $e');
     }
   }
-  // ------------------------------------------
 
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -226,8 +223,6 @@ class ApiService {
     }
   }
 
-  // --- NEW: Family Relationship Methods ---
-
   Future<List<FamilyRelationship>> getFamilyMembers(int personId) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -282,8 +277,6 @@ class ApiService {
     }
   }
 }
-
-// --- Data Models ---
 
 class Batch {
   final int id;
@@ -385,8 +378,6 @@ class Record {
     );
   }
 }
-
-// --- NEW: Models for Family Relationships ---
 
 class SimpleRecord {
   final int id;

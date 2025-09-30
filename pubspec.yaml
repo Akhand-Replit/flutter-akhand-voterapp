@@ -14,7 +14,7 @@ dependencies:
   provider: ^6.1.2
   http: ^1.2.1
   shared_preferences: ^2.2.3
-  image_picker: ^1.1.2 # <-- ADD THIS LINE
+  image_picker: ^1.1.2 # Required for picking images from camera or gallery
 
   cupertino_icons: ^1.0.8
 
