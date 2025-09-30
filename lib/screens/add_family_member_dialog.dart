@@ -5,13 +5,15 @@ import 'package:voter_app/services/api_service.dart';
 
 class AddFamilyMemberDialog extends StatefulWidget {
   final Record personRecord;
-  const AddFamilyMemberDialog({Key? key, required this.personRecord}) : super(key: key);
+  const AddFamilyMemberDialog({Key? key, required this.personRecord})
+      : super(key: key);
 
   @override
   _AddFamilyMemberDialogState createState() => _AddFamilyMemberDialogState();
 }
 
-class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> with SingleTickerProviderStateMixin {
+class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -28,7 +30,6 @@ class _AddFamilyMemberDialogState extends State<AddFamilyMemberDialog> with Sing
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Removed the redundant ChangeNotifierProvider. The dialog will now use the main AppProvider from the context.
     return AlertDialog(
       title: const Text('Add Family Member'),
       contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
@@ -105,7 +106,7 @@ class __AddExistingMemberTabState extends State<_AddExistingMemberTab> {
     );
 
     if (mounted) {
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(success ? 'Family member added!' : 'Failed to add member.'),
         backgroundColor: success ? Colors.green : Colors.red,
       ));
@@ -134,32 +135,66 @@ class __AddExistingMemberTabState extends State<_AddExistingMemberTab> {
           ),
           const SizedBox(height: 8),
           if (provider.eventDataStatus == Status.Fetching)
-            const Center(child: Padding(
+            const Center(
+                child: Padding(
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             )),
           if (provider.searchedRecords.isNotEmpty)
             SizedBox(
-              height: 150,
+              height: 250, // Increased height for better UI
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: provider.searchedRecords.length,
                 itemBuilder: (context, index) {
                   final record = provider.searchedRecords[index];
-                   if (record.id == widget.personRecord.id) return const SizedBox.shrink();
-                  return ListTile(
-                    title: Text(record.naam),
-                    onTap: () {
-                      setState(() {
-                        _selectedRelative = record;
-                      });
-                      provider.clearSearchResults();
-                    },
+                  if (record.id == widget.personRecord.id) {
+                    return const SizedBox.shrink();
+                  }
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.network(
+                          record.photoLink ?? 'https://placehold.co/100x100/EEE/31343C?text=No+Image',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey[200],
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.grey[400],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      title: Text(record.naam,
+                          style:
+                              const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Father: ${record.pitarNaam ?? 'N/A'}'),
+                          Text('Mother: ${record.matarNaam ?? 'N/A'}'),
+                        ],
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedRelative = record;
+                        });
+                        provider.clearSearchResults();
+                      },
+                    ),
                   );
                 },
               ),
             ),
-          
           if (_selectedRelative != null) ...[
             const SizedBox(height: 16),
             Chip(
@@ -190,7 +225,7 @@ class __AddExistingMemberTabState extends State<_AddExistingMemberTab> {
 
 // --- TAB WIDGET FOR ADDING A NEW MEMBER ---
 class _AddNewMemberTab extends StatefulWidget {
-    final Record personRecord;
+  final Record personRecord;
   const _AddNewMemberTab({required this.personRecord});
 
   @override
@@ -200,19 +235,40 @@ class _AddNewMemberTab extends StatefulWidget {
 class __AddNewMemberTabState extends State<_AddNewMemberTab> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _fatherNameController = TextEditingController();
+  final _motherNameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _relationshipController = TextEditingController();
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _fatherNameController.dispose();
+    _motherNameController.dispose();
+    _phoneController.dispose();
+    _relationshipController.dispose();
+    super.dispose();
+  }
+
   void _addNewMember(AppProvider provider) async {
-    if(!_formKey.currentState!.validate()){
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // First, create the new record
-    final newRecord = await provider.addNewRecord({
+    // Build the data map for the new record
+    final newRecordData = {
       'naam': _nameController.text.trim(),
-      // Add other fields as needed, or leave them blank
-      'kromik_no': 'N/A', 
-    });
+      'pitar_naam': _fatherNameController.text.trim(),
+      'matar_naam': _motherNameController.text.trim(),
+      'phone_number': _phoneController.text.trim(),
+      'kromik_no': 'N/A', // Default value
+    };
+    // Remove empty optional fields
+    newRecordData.removeWhere((key, value) => value.isEmpty);
+
+
+    // First, create the new record
+    final newRecord = await provider.addNewRecord(newRecordData);
 
     if (newRecord != null) {
       // If record creation is successful, add the relationship
@@ -221,7 +277,7 @@ class __AddNewMemberTabState extends State<_AddNewMemberTab> {
         newRecord.id,
         _relationshipController.text.trim(),
       );
-      if(mounted && success) {
+      if (mounted && success) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('New person created and linked!'),
           backgroundColor: Colors.green,
@@ -243,14 +299,32 @@ class __AddNewMemberTabState extends State<_AddNewMemberTab> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'New Person\'s Name'),
+              decoration: const InputDecoration(labelText: 'New Person\'s Name (Required)'),
               validator: (v) => v!.isEmpty ? 'Name is required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
+              controller: _fatherNameController,
+              decoration: const InputDecoration(labelText: 'Father\'s Name'),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _motherNameController,
+              decoration: const InputDecoration(labelText: 'Mother\'s Name'),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _phoneController,
+              decoration: const InputDecoration(labelText: 'Phone Number'),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
               controller: _relationshipController,
-              decoration: InputDecoration(labelText: 'Relationship to ${widget.personRecord.naam}'),
-               validator: (v) => v!.isEmpty ? 'Relationship is required' : null,
+              decoration: InputDecoration(
+                  labelText:
+                      'Relationship to ${widget.personRecord.naam} (Required)'),
+              validator: (v) => v!.isEmpty ? 'Relationship is required' : null,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -265,4 +339,3 @@ class __AddNewMemberTabState extends State<_AddNewMemberTab> {
     );
   }
 }
-

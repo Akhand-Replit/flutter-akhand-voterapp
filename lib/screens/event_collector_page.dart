@@ -36,21 +36,21 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
     _addressController.dispose();
     super.dispose();
   }
-  
+
   void _performSearch() {
-      final appProvider = Provider.of<AppProvider>(context, listen: false);
-      final params = {
-        'naam__icontains': _nameController.text,
-        'pitar_naam__icontains': _fatherNameController.text,
-        'matar_naam__icontains': _motherNameController.text,
-        'pesha__icontains': _professionController.text,
-        'thikana__icontains': _addressController.text,
-      };
-      params.removeWhere((key, value) => value.isEmpty);
-      
-      if (params.isNotEmpty) {
-        appProvider.searchVoterRecords(params);
-      }
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final params = {
+      'naam__icontains': _nameController.text,
+      'pitar_naam__icontains': _fatherNameController.text,
+      'matar_naam__icontains': _motherNameController.text,
+      'pesha__icontains': _professionController.text,
+      'thikana__icontains': _addressController.text,
+    };
+    params.removeWhere((key, value) => value.isEmpty);
+
+    if (params.isNotEmpty) {
+      appProvider.searchVoterRecords(params);
+    }
   }
 
   @override
@@ -94,17 +94,21 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Select an Event', style: Theme.of(context).textTheme.titleLarge),
+            Text('Select an Event',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            if (provider.eventDataStatus == Status.Fetching && provider.events.isEmpty)
+            if (provider.eventDataStatus == Status.Fetching &&
+                provider.events.isEmpty)
               const Center(child: CircularProgressIndicator())
             else if (provider.eventDataStatus == Status.Error)
-              Text('Error loading events: ${provider.errorMessage}', style: const TextStyle(color: Colors.red))
+              Text('Error loading events: ${provider.errorMessage}',
+                  style: const TextStyle(color: Colors.red))
             else
               DropdownButtonFormField<Event>(
                 value: provider.selectedEvent,
                 isExpanded: true,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
+                decoration:
+                    const InputDecoration(border: OutlineInputBorder()),
                 hint: const Text('-- Select an Event --'),
                 items: provider.events.map((Event event) {
                   return DropdownMenuItem<Event>(
@@ -130,25 +134,43 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Search for Records', style: Theme.of(context).textTheme.titleLarge),
+            Text('Search for Records',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder())),
+            TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                    labelText: 'Name', border: OutlineInputBorder())),
             const SizedBox(height: 8),
-            TextField(controller: _fatherNameController, decoration: const InputDecoration(labelText: 'Father\'s Name', border: OutlineInputBorder())),
+            TextField(
+                controller: _fatherNameController,
+                decoration: const InputDecoration(
+                    labelText: 'Father\'s Name', border: OutlineInputBorder())),
             const SizedBox(height: 8),
-            TextField(controller: _motherNameController, decoration: const InputDecoration(labelText: 'Mother\'s Name', border: OutlineInputBorder())),
+            TextField(
+                controller: _motherNameController,
+                decoration: const InputDecoration(
+                    labelText: 'Mother\'s Name', border: OutlineInputBorder())),
             const SizedBox(height: 8),
-            TextField(controller: _professionController, decoration: const InputDecoration(labelText: 'Profession', border: OutlineInputBorder())),
+            TextField(
+                controller: _professionController,
+                decoration: const InputDecoration(
+                    labelText: 'Profession', border: OutlineInputBorder())),
             const SizedBox(height: 8),
-            TextField(controller: _addressController, decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder())),
+            TextField(
+                controller: _addressController,
+                decoration: const InputDecoration(
+                    labelText: 'Address', border: OutlineInputBorder())),
             const SizedBox(height: 16),
             SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(onPressed: _performSearch, child: const Text('Search'))),
-             const SizedBox(height: 16),
+                child: ElevatedButton(
+                    onPressed: _performSearch, child: const Text('Search'))),
+            const SizedBox(height: 16),
             const Divider(),
-             const SizedBox(height: 16),
-             Text('Search Results', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 16),
+            Text('Search Results',
+                style: Theme.of(context).textTheme.titleMedium),
             _buildRecordList(provider.searchedRecords, provider),
             const SizedBox(height: 16),
             SizedBox(
@@ -174,16 +196,17 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
       ),
     );
   }
-  
+
   Widget _buildConnectedRecordsCard(AppProvider provider) {
-      return Card(
+    return Card(
       elevation: 4.0,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Currently Connected Records', style: Theme.of(context).textTheme.titleLarge),
+            Text('Currently Connected Records',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             _buildRecordList(provider.connectedRecords, provider),
           ],
@@ -197,58 +220,99 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (records.isEmpty) {
-      return Center(child: Text('No records found.', style: Theme.of(context).textTheme.bodyMedium));
+      return Center(
+          child: Text('No records found.',
+              style: Theme.of(context).textTheme.bodyMedium));
     }
 
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: records.length,
-      separatorBuilder: (context, index) => const Divider(),
+      separatorBuilder: (context, index) =>
+          const Divider(height: 20, color: Colors.transparent),
       itemBuilder: (context, index) {
         final record = records[index];
         final isConnected = provider.connectedRecordIds.contains(record.id);
-        
-        return ListTile(
-          title: Text(record.naam, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Text('Father: ${record.pitarNaam ?? 'N/A'}'),
-              Text('Mother: ${record.matarNaam ?? 'N/A'}'),
-              Text('Age: ${record.age?.toString() ?? 'N/A'}'),
-              Text('Batch: ${record.batchName ?? 'N/A'}'),
-            ],
+
+        return Card(
+          elevation: 2.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
           ),
-          trailing: Row( // <-- FIX: Changed Column to Row
-            mainAxisSize: MainAxisSize.min, // <-- FIX: Added to keep Row compact
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditRecordModal(record: record),
-                      fullscreenDialog: true,
-                    ),
-                  );
-                },
-                child: const Text('View'),
-              ),
-              const SizedBox(width: 8), // <-- FIX: Added spacing between buttons
-              ElevatedButton(
-                onPressed: () => provider.toggleRecordConnection(record),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isConnected ? Colors.redAccent : Colors.green,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: Image.network(
+                    record.photoLink ?? 'https://placehold.co/100x100/EEE/31343C?text=No+Image',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 80,
+                        height: 80,
+                        color: Colors.grey[200],
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.grey[400],
+                          size: 40,
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                child: Text(isConnected ? 'Disconnect' : 'Connect'),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(record.naam,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Text('Father: ${record.pitarNaam ?? 'N/A'}'),
+                      Text('Mother: ${record.matarNaam ?? 'N/A'}'),
+                      Text('Age: ${record.age?.toString() ?? 'N/A'}'),
+                      Text('Batch: ${record.batchName ?? 'N/A'}'),
+                    ],
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditRecordModal(record: record),
+                            fullscreenDialog: true,
+                          ),
+                        );
+                      },
+                      child: const Text('View'),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () => provider.toggleRecordConnection(record),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            isConnected ? Colors.redAccent : Colors.green,
+                      ),
+                      child: Text(isConnected ? 'Disconnect' : 'Connect'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 }
-
