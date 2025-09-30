@@ -81,10 +81,11 @@ class _AddRecordPageState extends State<AddRecordPage> {
         recordData['whatsapp_number'] = _whatsappController.text;
       }
 
-      final success = await appProvider.addNewRecord(recordData);
+      final newRecord = await appProvider.addNewRecord(recordData);
 
       if (mounted) {
-        if (success) {
+        // --- FIX: Check if the returned record is not null ---
+        if (newRecord != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Record added successfully!'),
@@ -253,3 +254,4 @@ class _AddRecordPageState extends State<AddRecordPage> {
     );
   }
 }
+

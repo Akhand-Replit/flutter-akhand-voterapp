@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voter_app/providers/app_provider.dart';
 import 'package:voter_app/services/api_service.dart';
+import 'add_family_member_dialog.dart'; // We will create this file in the next step
 
 class EditRecordModal extends StatefulWidget {
   final Record record;
@@ -11,7 +12,6 @@ class EditRecordModal extends StatefulWidget {
   _EditRecordModalState createState() => _EditRecordModalState();
 }
 
-// Add SingleTickerProviderStateMixin for TabController
 class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
@@ -32,9 +32,19 @@ class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // --- NEW: Increased tab controller length to 4 ---
+    _tabController = TabController(length: 4, vsync: this);
 
-    // Initialize controllers with existing record data
+    // Initialize text controllers
+    _initializeControllers();
+
+    // --- NEW: Fetch family members when the modal opens ---
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AppProvider>(context, listen: false).fetchFamilyMembers(widget.record.id);
+    });
+  }
+
+  void _initializeControllers() {
     _phoneController = TextEditingController(text: widget.record.phoneNumber);
     _whatsappController = TextEditingController(text: widget.record.whatsappNumber);
     _facebookController = TextEditingController(text: widget.record.facebookLink);
@@ -49,7 +59,6 @@ class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProv
 
   @override
   void dispose() {
-    // Dispose all controllers
     _tabController.dispose();
     _phoneController.dispose();
     _whatsappController.dispose();
@@ -102,6 +111,17 @@ class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProv
     }
   }
 
+  // --- NEW: Function to show the add family member dialog ---
+  void _showAddFamilyMemberDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // We will create this AddFamilyMemberDialog widget in the next step
+        return AddFamilyMemberDialog(personRecord: widget.record);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,10 +129,12 @@ class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProv
         title: Text('View/Edit: ${widget.record.naam}'),
         bottom: TabBar(
           controller: _tabController,
+          // --- NEW: Added Family Tab ---
           tabs: const [
             Tab(icon: Icon(Icons.info_outline), text: 'Info'),
             Tab(icon: Icon(Icons.contact_phone_outlined), text: 'Contact & Social'),
             Tab(icon: Icon(Icons.notes_outlined), text: 'Details'),
+            Tab(icon: Icon(Icons.people_alt_outlined), text: 'Family'),
           ],
         ),
       ),
@@ -122,10 +144,12 @@ class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProv
             key: _formKey,
             child: TabBarView(
               controller: _tabController,
+              // --- NEW: Added Family Tab View ---
               children: [
                 _buildInfoTab(),
                 _buildContactSocialTab(),
                 _buildDetailsTab(),
+                _buildFamilyTab(),
               ],
             ),
           );
@@ -207,9 +231,83 @@ class _EditRecordModalState extends State<EditRecordModal> with SingleTickerProv
     );
   }
 
+  // --- NEW: Family Tab Widget ---
+  Widget _buildFamilyTab() {
+    return Consumer<AppProvider>(
+      builder: (context, provider, child) {
+        if (provider.familyStatus == Status.Fetching) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (provider.familyStatus == Status.Error) {
+          return Center(child: Text('Error: ${provider.errorMessage}'));
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _showAddFamilyMemberDialog,
+                icon: const Icon(Icons.add),
+                label: const Text('Add Family Member'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Connected Family Members',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const Divider(),
+              Expanded(
+                child: provider.familyMembers.isEmpty
+                    ? const Center(child: Text('No family members added yet.'))
+                    : ListView.builder(
+                        itemCount: provider.familyMembers.length,
+                        itemBuilder: (context, index) {
+                          final member = provider.familyMembers[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: ListTile(
+                              title: Text(member.relative.naam),
+                              subtitle: Text('Relationship: ${member.relationshipType}'),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Confirm Deletion'),
+                                      content: Text('Are you sure you want to remove ${member.relative.naam}?'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+                                        TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Remove')),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    await provider.removeFamilyMember(member.id, widget.record.id);
+                                  }
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 
   // --- Reusable Field Widgets ---
-
   Widget _buildReadOnlyField(String label, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),

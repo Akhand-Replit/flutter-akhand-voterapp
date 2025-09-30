@@ -165,7 +165,6 @@ class ApiService {
     }
   }
 
-  // NEW: Method to update a record
   Future<Record> updateRecord(int recordId, Map<String, dynamic> data) async {
     final token = await _getToken();
     if (token == null) throw Exception('Authentication token not found.');
@@ -185,6 +184,62 @@ class ApiService {
       throw Exception('Failed to update record. Status: ${response.statusCode}');
     }
   }
+
+  // --- NEW: Family Relationship Methods ---
+
+  Future<List<FamilyRelationship>> getFamilyMembers(int personId) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Authentication token not found.');
+
+    final response = await http.get(
+      Uri.parse('$_baseUrl/api/family-relationships/?person_id=$personId'),
+      headers: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final List results = data['results'];
+      return results.map((e) => FamilyRelationship.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load family members');
+    }
+  }
+
+  Future<void> addFamilyMember(int personId, int relativeId, String relationshipType) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Authentication token not found.');
+
+    final response = await http.post(
+      Uri.parse('$_baseUrl/api/family-relationships/'),
+      headers: {
+        'Authorization': 'Token $token',
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        'person': personId,
+        'relative': relativeId,
+        'relationship_type': relationshipType,
+      }),
+    );
+
+    if (response.statusCode != 201) { // 201 Created
+      throw Exception('Failed to add family member.');
+    }
+  }
+
+  Future<void> removeFamilyMember(int relationshipId) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Authentication token not found.');
+
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/api/family-relationships/$relationshipId/'),
+      headers: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode != 204) { // 204 No Content
+      throw Exception('Failed to remove family member.');
+    }
+  }
 }
 
 // --- Data Models ---
@@ -192,28 +247,18 @@ class ApiService {
 class Batch {
   final int id;
   final String name;
-
   Batch({required this.id, required this.name});
-
   factory Batch.fromJson(Map<String, dynamic> json) {
-    return Batch(
-      id: json['id'],
-      name: json['name'],
-    );
+    return Batch(id: json['id'], name: json['name']);
   }
 }
 
 class Event {
   final int id;
   final String name;
-
   Event({required this.id, required this.name});
-
   factory Event.fromJson(Map<String, dynamic> json) {
-    return Event(
-      id: json['id'],
-      name: json['name'],
-    );
+    return Event(id: json['id'], name: json['name']);
   }
 }
 
@@ -299,3 +344,42 @@ class Record {
     );
   }
 }
+
+// --- NEW: Models for Family Relationships ---
+
+class SimpleRecord {
+  final int id;
+  final String naam;
+  final String? voterNo;
+
+  SimpleRecord({required this.id, required this.naam, this.voterNo});
+
+  factory SimpleRecord.fromJson(Map<String, dynamic> json) {
+    return SimpleRecord(
+      id: json['id'],
+      naam: json['naam'] ?? 'N/A',
+      voterNo: json['voter_no'],
+    );
+  }
+}
+
+class FamilyRelationship {
+  final int id;
+  final SimpleRecord relative;
+  final String relationshipType;
+
+  FamilyRelationship({
+    required this.id,
+    required this.relative,
+    required this.relationshipType,
+  });
+
+  factory FamilyRelationship.fromJson(Map<String, dynamic> json) {
+    return FamilyRelationship(
+      id: json['id'],
+      relative: SimpleRecord.fromJson(json['relative']),
+      relationshipType: json['relationship_type'],
+    );
+  }
+}
+
