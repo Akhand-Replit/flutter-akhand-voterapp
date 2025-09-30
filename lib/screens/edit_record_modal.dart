@@ -57,7 +57,7 @@ class _EditRecordModalState extends State<EditRecordModal>
     _descriptionController =
         TextEditingController(text: widget.record.description);
     _politicalStatusController =
-        TextEditingController(text: widget.record.politicalStatus);
+        TextEditingController(text: widget.record.politicalStatus); // CORRECTED: from TextController to TextEditingController
     _instagramController = TextEditingController(text: widget.record.instaLink);
     _tiktokController = TextEditingController(text: widget.record.tiktokLink);
     _youtubeController = TextEditingController(text: widget.record.youtubeLink);
@@ -182,12 +182,15 @@ class _EditRecordModalState extends State<EditRecordModal>
         title: Text('View/Edit: ${widget.record.naam}'),
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Colors.white, // Set selected icon color to white
+          unselectedLabelColor: Colors.white70, // Set unselected icon color to slightly dimmed white
+          indicatorColor: Colors.white, // Ensure indicator is also white
           tabs: const [
-            Tab(icon: Icon(Icons.info_outline), text: 'Info'),
-            Tab(icon: Icon(Icons.contact_phone_outlined), text: 'Contact & Soc'),
-            Tab(icon: Icon(Icons.image_outlined), text: 'Photo'),
-            Tab(icon: Icon(Icons.notes_outlined), text: 'Details'),
-            Tab(icon: Icon(Icons.people_alt_outlined), text: 'Family'),
+            Tab(icon: Icon(Icons.info_outline)), // Info Tab (Icon only)
+            Tab(icon: Icon(Icons.contact_phone_outlined)), // Contact & Soc Tab (Icon only)
+            Tab(icon: Icon(Icons.image_outlined)), // Photo Tab (Icon only)
+            Tab(icon: Icon(Icons.notes_outlined)), // Details Tab (Icon only)
+            Tab(icon: Icon(Icons.people_alt_outlined)), // Family Tab (Icon only)
           ],
         ),
       ),
@@ -209,15 +212,14 @@ class _EditRecordModalState extends State<EditRecordModal>
         },
       ),
       floatingActionButton: Consumer<AppProvider>(builder: (context, provider, child) {
-        return FloatingActionButton.extended(
-          onPressed: provider.recordMutationStatus == Status.Fetching
-              ? null
-              : _updateRecord,
-          label: provider.recordMutationStatus == Status.Fetching
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text('Update'),
-          icon: const Icon(Icons.save),
+        final isLoading = provider.recordMutationStatus == Status.Fetching;
+        return FloatingActionButton( // Changed to simple FloatingActionButton to remove text label
+          onPressed: isLoading ? null : _updateRecord,
           backgroundColor: Colors.green,
+          foregroundColor: Colors.white, // Explicitly set icon color to white
+          child: isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Icon(Icons.save), // Icon only
         );
       }),
     );

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:voter_app/providers/app_provider.dart';
 import 'package:voter_app/screens/add_record_modal.dart';
-import 'package:voter_app/screens/edit_record_modal.dart'; // Import the new modal
+import 'package:voter_app/screens/edit_record_modal.dart'; 
 import 'package:voter_app/services/api_service.dart';
 
 class EventCollectorPage extends StatefulWidget {
@@ -230,83 +230,80 @@ class _EventCollectorPageState extends State<EventCollectorPage> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: records.length,
       separatorBuilder: (context, index) =>
-          const Divider(height: 20, color: Colors.transparent),
+          const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final record = records[index];
         final isConnected = provider.connectedRecordIds.contains(record.id);
+
+        // Split the subtitle data into two logical lines for better display
+        final String line1 = 'Father: ${record.pitarNaam ?? 'N/A'} | Mother: ${record.matarNaam ?? 'N/A'}';
+        final String line2 = 'Age: ${record.age?.toString() ?? 'N/A'} | Batch: ${record.batchName ?? 'N/A'}';
 
         return Card(
           elevation: 2.0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
+          child: ListTile(
+            isThreeLine: true, // <-- Ensures enough vertical space for the text and icons
+            contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.network(
+                record.photoLink ?? 'https://placehold.co/100x100/EEE/31343C?text=No+Image',
+                width: 60, // Smaller image for list
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.grey[400],
+                      size: 30, // Smaller icon
+                    ),
+                  );
+                },
+              ),
+            ),
+            title: Text(record.naam,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 16)),
+            // Use Column for subtitle to ensure text wraps and fits within the designated space
+            subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(
-                    record.photoLink ?? 'https://placehold.co/100x100/EEE/31343C?text=No+Image',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 80,
-                        height: 80,
-                        color: Colors.grey[200],
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.grey[400],
-                          size: 40,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(record.naam,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      Text('Father: ${record.pitarNaam ?? 'N/A'}'),
-                      Text('Mother: ${record.matarNaam ?? 'N/A'}'),
-                      Text('Age: ${record.age?.toString() ?? 'N/A'}'),
-                      Text('Batch: ${record.batchName ?? 'N/A'}'),
-                    ],
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditRecordModal(record: record),
-                            fullscreenDialog: true,
-                          ),
-                        );
-                      },
-                      child: const Text('View'),
-                    ),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () => provider.toggleRecordConnection(record),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isConnected ? Colors.redAccent : Colors.green,
+                Text(line1),
+                Text(line2), // Second line of details
+                const SizedBox(height: 4), // Small vertical spacing
+              ],
+            ),
+            trailing: Column( // Column for actions on the right side
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center, // Align icons vertically
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.visibility_outlined, color: Colors.indigo), 
+                  tooltip: 'View Details',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditRecordModal(record: record),
+                        fullscreenDialog: true,
                       ),
-                      child: Text(isConnected ? 'Disconnect' : 'Connect'),
-                    ),
-                  ],
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    isConnected ? Icons.link_off : Icons.link,
+                    color: isConnected ? Colors.redAccent : Colors.green,
+                  ),
+                  tooltip: isConnected ? 'Disconnect from Event' : 'Connect to Event',
+                  onPressed: () => provider.toggleRecordConnection(record),
                 ),
               ],
             ),
